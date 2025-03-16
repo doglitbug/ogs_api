@@ -5,7 +5,7 @@ class GarageController
     {
     }
 
-    public function processRequest(string $verb, string|null $id, array $data)
+    public function processRequest(string $verb, string $id, array $data, array $tokenData)
     {
         $result = [];
         switch ($verb) {
@@ -21,7 +21,7 @@ class GarageController
         }
 
         if ($result) {
-            echo json_encode(["message" => $result]);
+            echo json_encode(["message" => "", "data" => $result]);
         } else {
             error(404, "Garage not found");
         }

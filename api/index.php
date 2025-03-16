@@ -6,21 +6,21 @@ $JwtController = new Jwt($_ENV["SECRET_KEY"]);
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $parts = explode("/", $path);
 
-$version = $parts[2];
+$version = $parts[2]; // v1
 $resource = $parts[3] ?? null;
 $id = $parts[4] ?? null;
 
 $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
 
 //TODO even if post from a form?
-if ($contentType !== 'application/json') {
-    error(415, "Only JSON content is supported");
-}
+// if ($contentType !== 'application/json') {
+//     error(415, "Only JSON content is supported");
+// }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_decode(file_get_contents('php://input'), true) ?? [];
+$tokenData = $JwtController->data ?? [];
 $method = $_SERVER['REQUEST_METHOD'];
 
-//No token required
 switch ($resource) {
     case "login":
         require_once("../src/login.php");
@@ -28,12 +28,9 @@ switch ($resource) {
     case "garage":
         require_once("../src/GarageController");
         $controller = new GarageController($db);
-        $controller->processRequest($method, $id, $data);
+        $controller->processRequest($method, $id, $data, $tokenData);
         break;
     default:
         echo json_encode(["message" => "Unknown resource: $resource"]);
         break;
 }
-
-//Log in required
-$valid = $JwtController->authenticateJWTToken();
