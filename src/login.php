@@ -24,7 +24,7 @@ if (!array_key_exists('username', $data) || !array_key_exists('password', $data)
 
 $user = $db->get_user_by_username($data['username']);
 
-if ($user === false) {
+if (!$user) {
     error(401, "Invalid username or password");
 }
 
@@ -47,5 +47,5 @@ $payload = [
 
 $token = $JwtController->encode($payload);
 
-echo json_encode(["token" => $token]);
+echo json_encode(["message" => "success", "token" => $token]);
 die();

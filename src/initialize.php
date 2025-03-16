@@ -38,7 +38,7 @@ header("Content-type: application/json; charset=UTF-8");
 function error(int $statusCode, string $message, string $e = "")
 {
     http_response_code($statusCode);
-    $output["error"] = $message;
+    $output["message"] = $message;
     if ($_ENV['APPLICATION_ENV'] === "DEV") {
         $output["extended"] = $e;
     }

@@ -18,6 +18,7 @@ $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) 
 // }
 
 $data = json_decode(file_get_contents('php://input'), true) ?? [];
+$JwtController->authenticateJWTToken();
 $tokenData = $JwtController->data ?? [];
 $method = $_SERVER['REQUEST_METHOD'];
 

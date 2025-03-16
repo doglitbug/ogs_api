@@ -72,12 +72,9 @@ class Jwt
     public function authenticateJWTToken(): bool
     {
         if (!preg_match("/^Bearer\s+(.*)$/", $_SERVER["HTTP_AUTHORIZATION"], $matches)) {
-            $this->data = [];
             return false;
             //error(400, "Incomplete or missing authorization header");
         }
-
-        //TODO What do we do with no token but on a endpoint that is public?
         $this->data = $this->decode($matches[1]);
 
         return true;
