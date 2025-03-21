@@ -1,4 +1,5 @@
 <?php
+global $db;
 require_once('../src/initialize.php');
 require_once("../src/Jwt.php");
 $JwtController = new Jwt($_ENV["SECRET_KEY"]);
@@ -17,6 +18,8 @@ $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) 
 //     error(415, "Only JSON content is supported");
 // }
 
+//TODO Get parameters such as ?page=2
+
 $data = json_decode(file_get_contents('php://input'), true) ?? [];
 $JwtController->authenticateJWTToken();
 $tokenData = $JwtController->data ?? [];
@@ -27,11 +30,11 @@ switch ($resource) {
         require_once("../src/login.php");
         break;
     case "garage":
-        require_once("../src/GarageController");
+        require_once("../src/GarageController.php");
         $controller = new GarageController($db);
         $controller->processRequest($method, $id, $data, $tokenData);
         break;
     default:
-        echo json_encode(["message" => "Unknown resource: $resource"]);
+        echo error(404, "Unknown resource: $resource");
         break;
 }

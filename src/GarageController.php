@@ -1,39 +1,46 @@
 <?php
+
 class GarageController
 {
     public function __construct(private Database $database)
     {
     }
 
-    public function processRequest(string $verb, string $id, array $data, array $tokenData)
+    public function processRequest(string $verb, string $id, array $data, array $tokenData): void
     {
         $result = [];
         switch ($verb) {
             case "GET":
                 if ($id) {
                     $result = $this->get_garage($id);
+                    if ($result) {
+                        echo json_encode(["garage" => $result]);
+                    } else {
+                        error(404, "Garage not found");
+                    }
+                    //TODO Check null, visible, owner or worker etc
                 } else {
                     $result = $this->get_garages();
+                    if ($result) {
+                        echo json_encode(["garages" => $result]);
+                    } else {
+                        error(404, "No Garages found");
+                    }
+                    //TODO Check null, visible, owner or worker etc
                 }
-
+                break;
+            case "POST":
                 break;
 
-        }
-
-        if ($result) {
-            echo json_encode(["data" => $result, "tokenData"=>$tokenData]);
-        } else {
-            error(404, "Garage not found");
         }
     }
 
     /** Get an individual garage
      * @param string $garage_id
-     * @return array|null
+     * @return array
      */
-    private function get_garage(
-        string $garage_id
-    ): array|null {
+    private function get_garage(string $garage_id): array
+    {
         $query = <<<SQL
         SELECT  garage_id,
                 name,
@@ -51,7 +58,7 @@ class GarageController
 
         $result = $this->database->get_query($query, "s", [$garage_id]);
 
-        return $result ? $result[0] : null;
+        return $result ? $result[0] : [];
     }
 
     public function get_garages(array $options = []): array
@@ -75,7 +82,6 @@ class GarageController
 
         if (isset($options['visible'])) {
             $query .= <<<SQL
-            
                 $where_and visible = ?
             SQL;
             $types .= "s";
@@ -86,7 +92,6 @@ class GarageController
         if (isset($options['search']) && $options['search']) {
             $options['search'] = '%' . $options['search'] . '%';
             $query .= <<<SQL
-            
                 $where_and (name LIKE ?
                 OR garage.description LIKE ?)
             SQL;
