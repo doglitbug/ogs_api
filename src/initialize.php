@@ -1,5 +1,8 @@
 <?php
 //Load Environment variables
+
+use JetBrains\PhpStorm\NoReturn;
+
 require_once('DotEnv.php');
 $dotenv = new DotEnv('../.env');
 $dotenv->load();
@@ -31,20 +34,20 @@ header("Content-type: application/json; charset=UTF-8");
 /**
  * Generic error handler
  * @param int $statusCode HTTP Code for error
- * @param string $message Message
- * @param string $e Extended error message for debugging
- * @return never
+ * @param string $error Message
+ * @param string|array $extended Extended error message or an array for debugging
  */
-function error(int $statusCode, string $message, string $e = "")
+#[NoReturn] function error(int $statusCode, string $error, string|array $extended = ""): void
 {
-    http_response_code($statusCode);
-    $output["message"] = $message;
+    $output["error"] = $error;
     if ($_ENV['APPLICATION_ENV'] === "DEV") {
-        $output["extended"] = $e;
+        $output["extended"] = $extended;
     }
-    echo json_encode($output);
     if (isset($db))
         $db->disconnect();
+
+    http_response_code($statusCode);
+    echo json_encode($output);
     die();
 }
 

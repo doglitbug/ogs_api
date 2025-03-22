@@ -64,9 +64,7 @@ class Jwt
             error(401, "Signature doesn't match");
         }
 
-        $payload = json_decode($this->base64URLDecode($matches["payload"]), true);
-
-        return $payload;
+        return json_decode($this->base64URLDecode($matches["payload"]), true);
     }
 
     public function authenticateJWTToken(): bool

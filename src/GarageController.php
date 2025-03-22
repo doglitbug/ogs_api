@@ -8,7 +8,6 @@ class GarageController
 
     public function processRequest(string $verb, string $id, array $data, array $tokenData): void
     {
-        $result = [];
         switch ($verb) {
             case "GET":
                 if ($id) {
@@ -22,7 +21,7 @@ class GarageController
                 } else {
                     $result = $this->get_garages();
                     if ($result) {
-                        echo json_encode(["garages" => $result]);
+                        echo json_encode(["garages" => ["items" => $result]]);
                     } else {
                         error(404, "No Garages found");
                     }
