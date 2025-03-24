@@ -4,16 +4,16 @@ require_once('../src/initialize.php');
 require_once("../src/Jwt.php");
 $JwtController = new Jwt($_ENV["SECRET_KEY"]);
 
+
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $parts = explode("/", $path);
 
 $version = $parts[2]; // v1
 $resource = $parts[3] ?? null;
-$id = $parts[4] ?? null;
+$id = $parts[4] ?? "";
 
 $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
 
-//TODO even if post from a form?
 if ($contentType !== 'application/json') {
     error(415, "Only JSON content is supported");
 }
@@ -25,8 +25,10 @@ if (!empty($_SERVER['QUERY_STRING'])) {
     $query = $parsed['query'];
     parse_str($query, $params);
 }
-//Prefer $body over $params if duplicate keys
+//Prefer $body over $params if duplicate keys exist
 $data = array_merge($params, $body);
+
+//TODO Check data is valid and within SQL injection etc
 
 $JwtController->authenticateJWTToken();
 $tokenData = $JwtController->data ?? [];
@@ -46,6 +48,11 @@ switch ($resource) {
     case "item":
         require_once("../src/ItemController.php");
         $controller = new ItemController($db);
+        $controller->processRequest($method, $id, $data, $tokenData);
+        break;
+    case "search":
+        require_once("../src/SearchController.php");
+        $controller = new SearchController($db);
         $controller->processRequest($method, $id, $data, $tokenData);
         break;
     default:

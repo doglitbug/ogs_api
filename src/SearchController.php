@@ -1,6 +1,6 @@
 <?php
 
-class ItemController
+class SearchController
 {
     public function __construct(private Database $database)
     {
@@ -10,26 +10,13 @@ class ItemController
     {
         switch ($verb) {
             case "GET":
-                if ($id) {
-                    $result = $this->get_item($id);
-                    if ($result) {
-                        echo json_encode(["item" => $result]);
-                    } else {
-                        error(404, "Item not found");
-                    }
-                    //TODO Check null, visible, owner or worker etc
+                $result = $this->get_items($data);
+                if ($result) {
+                    echo json_encode(["search" => ["items" => $result]]);
                 } else {
-                    $result = $this->get_items($data);
-                    if ($result) {
-                        echo json_encode(["items" => ["items" => $result]]);
-                    } else {
-                        error(404, "No items found",[$data]);
-                    }
-                    //TODO Check null, visible, owner or worker etc
+                    error(404, "No items found", [$data]);
                 }
-                break;
-            case "POST":
-                break;
+            //TODO Check null, visible, owner or worker etc
 
         }
     }
@@ -105,29 +92,4 @@ class ItemController
         return $this->database->get_query($query, $types, $values, $options);
     }
 
-    /** Get an individual item, usually for show/edit item
-     * @param string $item_id
-     * @param array $options public: garage hidden will override visibility
-     * @return array|null
-     * @todo set visible query as an extra query??
-     */
-    public function get_item(string $item_id, array $options = []): array|null
-    {
-        $visible_query = isset($options['public']) ? "if (item.visible and garage.visible, true, false) as visible" : "item.visible";
-
-        $query = <<<SQL
-        SELECT  item.item_id,
-                item.garage_id,
-                item.name,
-                item.description,
-                $visible_query
-        FROM item
-        LEFT JOIN garage USING (garage_id)
-        WHERE item_id = ?
-        LIMIT 1
-        SQL;
-
-        $result = $this->database->get_query($query, "s", [$item_id]);
-        return $result ? $result[0] : null;
-    }
 }
