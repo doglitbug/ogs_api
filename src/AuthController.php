@@ -38,10 +38,14 @@ if ($user["locked_out"] === 1) {
 // }
 
 $payload = [
-    "id" => $user['user_id'],
     "username" => $user["username"],
     "name" => $user["name"],
-    "role" => $user["role"]
+    "email" => $user["email"],
+    "user_id" => $user['user_id'],
+    "location_id" => $user["location_id"],
+    "location" => $user["location"],
+    "role" => $user["role"],
+
 ];
 
 //$payload = $user;
