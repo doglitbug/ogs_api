@@ -1,12 +1,10 @@
 <?php
 
-class AuthController
-{
-    public function __construct(private Database $database)
-    {
-    }
+use JetBrains\PhpStorm\NoReturn;
 
-    public function processRequest(string $verb, string $id, array $data, array $tokenData): void
+class AuthController extends Controller
+{
+    #[NoReturn] public function processRequest(string $verb, string $id, array $data): void
     {
         //Log in user
         if ($verb != "POST") {

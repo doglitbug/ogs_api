@@ -1,12 +1,8 @@
 <?php
 
-class GarageController
+class GarageController extends Controller
 {
-    public function __construct(private Database $database)
-    {
-    }
-
-    public function processRequest(string $verb, string $id, array $options, array $tokenData): void
+    public function processRequest(string $verb, string $id, array $options): void
     {
         switch ($verb) {
             case "GET":

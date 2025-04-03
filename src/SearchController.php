@@ -1,12 +1,8 @@
 <?php
 
-class SearchController
+class SearchController extends Controller
 {
-    public function __construct(private Database $database)
-    {
-    }
-
-    public function processRequest(string $verb, string $id, array $data, array $tokenData): void
+    public function processRequest(string $verb, string $id, array $data): void
     {
         switch ($verb) {
             case "GET":
