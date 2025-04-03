@@ -44,10 +44,10 @@ class Database
      * @param string $query Parameterized query string
      * @param string $types String of value types, eg "sss"
      * @param array $values Array of values
-     * @param array $options paginate: Use pagination to return only a subset
+     * @param array $data paginate: Use pagination to return only a subset
      * @return array|null Results or empty array
      */
-    public function get_query(string $query, string $types = "", array $values = [], array $options = []): array|null
+    public function get_query(string $query, string $types = "", array $values = [], array $data = []): array|null
     {
         // if (isset($options['paginate'])) {
         //     list($page, $size) = get_page_and_size();
@@ -304,34 +304,6 @@ class Database
         return $result ? $result[0] : null;
     }
 
-    /** Get user by username
-     * @param string $username Username
-     * @return array|null User details
-     */
-    public function get_user_by_username(string $username): array|null
-    {
-        $query = <<<SQL
-        SELECT  user_id,
-                username,
-                name,
-                email,
-                location_id,
-                location.description as location,
-                locked_out,
-                IFNULL(admin.description, 'User') as role,
-                user.created_at,
-                user.updated_at
-        FROM user
-        LEFT JOIN location using (location_id)
-        LEFT JOIN user_admin using (user_id)
-        LEFT JOIN admin using (admin_id)
-        WHERE username = ?
-        LIMIT 1
-        SQL;
-
-        $result = $this->get_query($query, "s", [$username]);
-        return $result ? $result[0] : null;
-    }
 
     /** Add a new user to the database
      * @param array $user Requires username, name and email

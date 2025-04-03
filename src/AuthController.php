@@ -18,7 +18,7 @@ class AuthController
             error(400, "Missing login credentials");
         }
 
-        $user = $this->database->get_user_by_username($data['username']);
+        $user = $this->get_user_for_login($data['username']);
 
         if (!$user) {
             error(401, "Invalid username or password");
@@ -51,5 +51,34 @@ class AuthController
 
         echo json_encode(["message" => "success", "token" => $token]);
         die();
+    }
+
+    /** Get user by username for logging in
+     * @param string $username Username
+     * @return array|null User details
+     */
+    public function get_user_for_login(string $username): array|null
+    {
+        $query = <<<SQL
+        SELECT  user_id,
+                username,
+                name,
+                email,
+                location_id,
+                location.description as location,
+                locked_out,
+                IFNULL(admin.description, 'User') as role,
+                user.created_at,
+                user.updated_at
+        FROM user
+        LEFT JOIN location using (location_id)
+        LEFT JOIN user_admin using (user_id)
+        LEFT JOIN admin using (admin_id)
+        WHERE username = ?
+        LIMIT 1
+        SQL;
+
+        $result = $this->database->get_query($query, "s", [$username]);
+        return $result ? $result[0] : null;
     }
 }
