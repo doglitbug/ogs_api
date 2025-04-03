@@ -8,7 +8,7 @@ $JwtController = new Jwt($_ENV["SECRET_KEY"]);
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $parts = explode("/", $path);
 
-$version = $parts[2]; // v1
+$version = $parts[2]; // v2
 $resource = $parts[3] ?? null;
 $id = $parts[4] ?? "";
 
@@ -28,32 +28,32 @@ if (!empty($_SERVER['QUERY_STRING'])) {
 //Prefer $body over $params if duplicate keys exist
 $data = array_merge($params, $body);
 
-//TODO Check data is valid and within SQL injection etc
+//TODO Check data is valid and without SQL injection etc
 
 $JwtController->authenticateJWTToken();
 $tokenData = $JwtController->data ?? [];
-$method = $_SERVER['REQUEST_METHOD'];
+$verb = $_SERVER['REQUEST_METHOD'];
 
 switch ($resource) {
     case "login":
         require_once("../src/AuthController.php");
-        //$controller = new AuthController($db);
-        //$controller->login();
+        $controller = new AuthController($db);
+        $controller->processRequest($verb, "", $data, []);
         break;
     case "garage":
         require_once("../src/GarageController.php");
         $controller = new GarageController($db);
-        $controller->processRequest($method, $id, $data, $tokenData);
+        $controller->processRequest($verb, $id, $data, $tokenData);
         break;
     case "item":
         require_once("../src/ItemController.php");
         $controller = new ItemController($db);
-        $controller->processRequest($method, $id, $data, $tokenData);
+        $controller->processRequest($verb, $id, $data, $tokenData);
         break;
     case "search":
         require_once("../src/SearchController.php");
         $controller = new SearchController($db);
-        $controller->processRequest($method, $id, $data, $tokenData);
+        $controller->processRequest($verb, $id, $data, $tokenData);
         break;
     default:
         echo error(404, "Unknown resource: $resource", $data);
