@@ -63,7 +63,6 @@ class SearchController
 
         if (isset($options['garage_id'])) {
             $query .= <<<SQL
-            
                 $where_and garage_id = ?
             SQL;
             $types .= "s";
@@ -73,7 +72,6 @@ class SearchController
 
         if (isset($options['visible'])) {
             $query .= <<<SQL
-            
             $where_and item.visible = '1' AND garage.visible = '1'
         SQL;
             $where_and = "AND";
@@ -81,7 +79,6 @@ class SearchController
 
         if (isset($options['search']) && $options['search'] != "") {
             $query .= <<<SQL
-
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
@@ -91,5 +88,4 @@ class SearchController
 
         return $this->database->get_query($query, $types, $values, $options);
     }
-
 }

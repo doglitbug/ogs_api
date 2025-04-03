@@ -6,12 +6,12 @@ class GarageController
     {
     }
 
-    public function processRequest(string $verb, string $id, array $data, array $tokenData): void
+    public function processRequest(string $verb, string $id, array $options, array $tokenData): void
     {
         switch ($verb) {
             case "GET":
                 if ($id) {
-                    $result = $this->get_garage($id);
+                    $result = $this->get_garage($id, $options);
                     if ($result) {
                         echo json_encode(["garage" => $result]);
                     } else {
@@ -36,10 +36,14 @@ class GarageController
 
     /** Get an individual garage
      * @param string $garage_id
+     * @param array $options
      * @return array
      */
-    private function get_garage(string $garage_id): array
+    private function get_garage(string $garage_id, array $options): array
     {
+        $types = "";
+        $values = array();
+
         $query = <<<SQL
         SELECT  garage_id,
                 name,
@@ -55,7 +59,21 @@ class GarageController
         LIMIT 1
         SQL;
 
-        $result = $this->database->get_query($query, "s", [$garage_id]);
+        $types .= "s";
+        $values[] = $garage_id;
+
+        $where_and = "WHERE";
+
+        if (isset($options['visible'])) {
+            $query .= <<<SQL
+                $where_and visible = ?
+            SQL;
+            $types .= "s";
+            $values[] = $options['visible'];
+            $where_and = "AND";
+        }
+
+        $result = $this->database->get_query($query, $types, $values, $options);
 
         return $result ? $result[0] : [];
     }
