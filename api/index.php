@@ -33,7 +33,7 @@ $data = array_merge($params, $body);
 
 $JwtController->authenticateJWTToken();
 $tokenData = $JwtController->data ?? [];
-$verb = $_SERVER['REQUEST_METHOD'];
+$verb = strtoupper($_SERVER['REQUEST_METHOD']);
 
 switch ($resource) {
     case "login":

@@ -43,6 +43,17 @@ header("Content-type: application/json; charset=UTF-8");
     if ($_ENV['APPLICATION_ENV'] === "DEV") {
         $output["extended"] = $extended;
     }
+
+    json_response($output, $statusCode);
+}
+
+/** Output a JSON response and terminate
+ * @param array $output Response to encode and sent
+ * @param int $statusCode Defaults to 200
+ * @return void
+ */
+#[NoReturn] function json_response(array $output, int $statusCode = 200): void
+{
     if (isset($db))
         $db->disconnect();
 

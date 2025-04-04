@@ -2,32 +2,25 @@
 
 class GarageController extends Controller
 {
-    public function processRequest(string $verb, string $id, array $options): void
+    public function processGetRequest(string $id, array $options): void
     {
-        switch ($verb) {
-            case "GET":
-                if ($id) {
-                    $result = $this->get_garage($id, $options);
-                    if ($result) {
-                        echo json_encode(["garage" => $result]);
-                    } else {
-                        error(404, "Garage not found");
-                    }
-                    //TODO Check null, visible, owner or worker etc
-                } else {
-                    $result = $this->get_garages();
-                    if ($result) {
-                        echo json_encode(["garages" => ["items" => $result]]);
-                    } else {
-                        error(404, "No Garages found");
-                    }
-                    //TODO Check null, visible, owner or worker etc
-                }
-                break;
-            case "POST":
-                break;
-
+        if ($id) {
+            $result = $this->get_garage($id, $options);
+            if ($result) {
+                json_response(["garage" => $result]);
+            } else {
+                error(404, "Garage not found");
+            }
         }
+        //TODO Check null, visible, owner or worker etc
+
+        $result = $this->get_garages($options);
+        if ($result) {
+            echo json_response(["garages" => ["results" => $result]]);
+        } else {
+            error(404, "No Garages found");
+        }
+        //TODO Check null, visible, owner or worker etc
     }
 
     /** Get an individual garage
@@ -74,7 +67,7 @@ class GarageController extends Controller
         return $result ? $result[0] : [];
     }
 
-    public function get_garages(array $options = []): array
+    public function get_garages(array $options): array
     {
         $types = "";
         $values = array();

@@ -2,19 +2,15 @@
 
 class SearchController extends Controller
 {
-    public function processRequest(string $verb, string $id, array $data): void
+    public function processGetRequest(string $id, array $data): void
     {
-        switch ($verb) {
-            case "GET":
                 $result = $this->get_items($data);
                 if ($result) {
-                    echo json_encode(["search" => ["items" => $result]]);
+                    json_response(["search" => ["items" => $result]]);
                 } else {
                     error(404, "No items found", [$data]);
                 }
             //TODO Check null, visible, owner or worker etc
-
-        }
     }
 
     /** Get items, usually from an individual garage with primary image

@@ -2,31 +2,26 @@
 
 class ItemController extends Controller
 {
-    public function processRequest(string $verb, string $id, array $data): void
+    public function processGetRequest(string $id, array $data): void
     {
-        switch ($verb) {
-            case "GET":
-                if ($id) {
-                    $result = $this->get_item($id);
-                    if ($result) {
-                        echo json_encode(["item" => $result]);
-                    } else {
-                        error(404, "Item not found");
-                    }
-                    //TODO Check null, visible, owner or worker etc
-                } else {
-                    $result = $this->get_items($data);
-                    if ($result) {
-                        echo json_encode(["items" => ["items" => $result]]);
-                    } else {
-                        error(404, "No items found",[$data]);
-                    }
-                    //TODO Check null, visible, owner or worker etc
-                }
-                break;
-            case "POST":
-                break;
+
+        if ($id) {
+            $result = $this->get_item($id);
+            if ($result) {
+                json_response(["item" => $result]);
+            } else {
+                error(404, "Item not found");
+            }
+            //TODO Check null, visible, owner or worker etc
         }
+
+        $result = $this->get_items($data);
+        if ($result) {
+            json_response(["items" => ["items" => $result]]);
+        } else {
+            error(404, "No items found", [$data]);
+        }
+        //TODO Check null, visible, owner or worker etc
     }
 
     /** Get items, usually from an individual garage with primary image

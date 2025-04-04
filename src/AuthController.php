@@ -1,22 +1,14 @@
 <?php
 
-use JetBrains\PhpStorm\NoReturn;
-
 class AuthController extends Controller
 {
-    #[NoReturn] public function processRequest(string $verb, string $id, array $data): void
+    public function processPostRequest(string $id, array $data): void
     {
-        //Log in user
-        if ($verb != "POST") {
-            http_response_code(405);
-            header('ALLOW: POST');
-        }
-
         if (!array_key_exists('username', $data) || !array_key_exists('password', $data)) {
             error(400, "Missing login credentials");
         }
 
-        $user = $this->get_user_for_login($data['username']);
+        $user = $this->getUserForLogin($data['username']);
 
         if (!$user) {
             error(401, "Invalid username or password");
@@ -47,15 +39,14 @@ class AuthController extends Controller
         $JwtController = new Jwt($_ENV["SECRET_KEY"]);
         $token = $JwtController->encode($payload);
 
-        echo json_encode(["message" => "success", "token" => $token]);
-        die();
+        json_response(["token" => $token]);
     }
 
     /** Get user by username for logging in
      * @param string $username Username
      * @return array|null User details
      */
-    public function get_user_for_login(string $username): array|null
+    public function getUserForLogin(string $username): array|null
     {
         $query = <<<SQL
         SELECT  user_id,
@@ -65,9 +56,7 @@ class AuthController extends Controller
                 location_id,
                 location.description as location,
                 locked_out,
-                IFNULL(admin.description, 'User') as role,
-                user.created_at,
-                user.updated_at
+                IFNULL(admin.description, 'User') as role
         FROM user
         LEFT JOIN location using (location_id)
         LEFT JOIN user_admin using (user_id)
