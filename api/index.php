@@ -41,6 +41,12 @@ switch ($resource) {
         $controller = new AuthController($db);
         $controller->processRequest($verb, "", $data);
         break;
+    case "user":
+        require_once("../src/UserController.php");
+        $controller = new UserController($db, $tokenData);
+        $controller->processRequest($verb, $id, $data);
+        break;
+
     case "garage":
         require_once("../src/GarageController.php");
         $controller = new GarageController($db, $tokenData);
@@ -55,6 +61,10 @@ switch ($resource) {
         require_once("../src/SearchController.php");
         $controller = new SearchController($db, $tokenData);
         $controller->processRequest($verb, $id, $data);
+        break;
+
+    case "token":
+        json_encode($tokenData);
         break;
     default:
         echo error(404, "Unknown resource: $resource", $data);

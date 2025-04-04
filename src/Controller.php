@@ -10,14 +10,43 @@ abstract class Controller
     {
     }
 
+    /** Check to see if the current user is logged in or a guest
+     * @return bool
+     */
+    protected function isLoggedIn(): bool
+    {
+        return (bool)$this->tokenData;
+    }
+
+    /** Check to see if this uer is an Admin
+     * @return bool
+     */
+    protected function isAdmin(): bool
+    {
+        return (bool)$this->tokenData["role"] == "Admin";
+    }
+
+    /** Get the currently logged-in users ID, assumes logged in check already done
+     * @return string
+     */
+    protected function getCurrentUserID(): string
+    {
+        try {
+            return $this->tokenData["user_id"];
+        } catch (Exception $e) {
+            error(500, "Unknown user state", $e);
+        }
+    }
+
     /**
      * @param string $verb GET | POST
      * @param string $id Resource ID
      * @param array $data Additional data
      * @return void
      */
-    public function processRequest(string $verb, string $id, array $data):void{
-        switch ($verb){
+    public function processRequest(string $verb, string $id, array $data): void
+    {
+        switch ($verb) {
             case "GET":
                 $this->processGetRequest($id, $data);
                 break;

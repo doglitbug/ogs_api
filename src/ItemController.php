@@ -4,7 +4,6 @@ class ItemController extends Controller
 {
     public function processGetRequest(string $id, array $data): void
     {
-
         if ($id) {
             $result = $this->get_item($id);
             if ($result) {

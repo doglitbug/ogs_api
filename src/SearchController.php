@@ -6,7 +6,7 @@ class SearchController extends Controller
     {
                 $result = $this->get_items($data);
                 if ($result) {
-                    json_response(["search" => ["items" => $result]]);
+                    json_response(["search" => ["results" => $result]]);
                 } else {
                     error(404, "No items found", [$data]);
                 }
