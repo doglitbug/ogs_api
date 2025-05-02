@@ -53,6 +53,9 @@ abstract class Controller
             case "POST":
                 $this->processPostRequest($id, $data);
                 break;
+            case "PUT":
+                $this->processPutRequest($id, $data);
+                break;
             default:
                 error(500, "Unknown or unimplemented verb", $verb);
         }

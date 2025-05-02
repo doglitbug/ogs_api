@@ -14,15 +14,15 @@ class AuthController extends Controller
             error(401, "Invalid username or password");
         }
 
-        if ($user["locked_out"] === 1) {
-            error(403, "Account locked out, please see Admin");
-        }
-
         // if (!password_verify($data['password'], $user['password_hash'])) {
         //     error(401, "Invalid username or password");
         // }
         if ($data['password'] == "") {
             error(401, "Invalid username or password");
+        }
+
+        if ($user["locked_out"] === 1) {
+            error(403, "Account locked out, please see Admin");
         }
 
         $payload = [

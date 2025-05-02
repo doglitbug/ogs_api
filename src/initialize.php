@@ -34,10 +34,10 @@ header("Content-type: application/json; charset=UTF-8");
 /**
  * Generic error handler
  * @param int $statusCode HTTP Code for error
- * @param string $error Message
+ * @param string|array $error Message(s)
  * @param string|array $extended Extended error message or an array for debugging
  */
-#[NoReturn] function error(int $statusCode, string $error, string|array $extended = ""): void
+#[NoReturn] function error(int $statusCode, string|array $error, string|array $extended = ""): void
 {
     $output["error"] = $error;
     if ($_ENV['APPLICATION_ENV'] === "DEV") {

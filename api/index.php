@@ -67,5 +67,5 @@ switch ($resource) {
         json_encode($tokenData);
         break;
     default:
-        echo error(404, "Unknown resource: $resource", $data);
+        error(404, "Unknown resource: $resource", $data);
 }

@@ -15,7 +15,33 @@ class UserController extends Controller
         if ($result) {
             echo json_response(["user" => $result]);
         } else {
-            error(404, "user not found");
+            error(404, "User not found");
+        }
+    }
+
+    public function processPutRequest(string $id, array $data): void
+    {
+        //Looking at any user details requires being logged in to prevent web scraping bots
+        if (!$this->isLoggedIn()) {
+            error(403, "Please log in to continue");
+        }
+
+        if ($id == "") $id = $this->getCurrentUserID();
+
+        //TODO Check we are allowed to update this user, either self OR admin
+
+        //Check valid data!
+        $errors = [];
+
+        if ($errors) {
+            error(400, ["errors" => $errors]);
+        }
+        $result = $this->updateUser($id, $data);
+
+        if ($result) {
+            echo json_response( ["user" => $result]);
+        } else {
+            error(500, "Error updating User");
         }
     }
 
@@ -29,7 +55,8 @@ class UserController extends Controller
                 location_id,
                 location.description as location,
                 locked_out,
-                IFNULL(admin.description, 'User') as role
+                IFNULL(admin.description, 'User') as role,
+                user.description
         FROM user
         LEFT JOIN location using (location_id)
         LEFT JOIN user_admin using (user_id)
@@ -40,5 +67,27 @@ class UserController extends Controller
 
         $result = $this->database->get_query($query, "s", [$user_id]);
         return $result ? $result[0] : null;
+    }
+
+    public function updateUser(string $id, array $data): array
+    {
+        $query = <<<SQL
+        UPDATE user SET username = ?,
+                        name = ?,
+                        description = ?,
+                        location_id = ?
+        WHERE user_id = ?
+        LIMIT 1
+        SQL;
+
+        $this->database->update_query($query, "sssss",
+            [$data['username'],
+                $data['name'],
+                $data['description'],
+                $data['location_id'],
+                $id
+            ]);
+
+        return $this->getUser($id);
     }
 }
