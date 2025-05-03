@@ -46,11 +46,13 @@ abstract class Controller
      */
     public function processRequest(string $verb, string $id, array $data): void
     {
+        //TODO Uppercase verb, is this required?
         switch ($verb) {
             case "GET":
                 $this->processGetRequest($id, $data);
                 break;
             case "POST":
+                //TODO Require log in here and on all following verbs?
                 $this->processPostRequest($id, $data);
                 break;
             case "PUT":

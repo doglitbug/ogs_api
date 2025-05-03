@@ -13,7 +13,7 @@ class UserController extends Controller
 
         $result = $this->getUser($id);
         if ($result) {
-            echo json_response(["user" => $result]);
+            json_response(["user" => $result]);
         } else {
             error(404, "User not found");
         }
@@ -30,16 +30,18 @@ class UserController extends Controller
 
         //TODO Check we are allowed to update this user, either self OR admin
 
-        //Check valid data!
+        //TODO Check valid data!
         $errors = [];
+        //$errors['name']="Haha";
 
         if ($errors) {
-            error(400, ["errors" => $errors]);
+            error(400, $errors);
         }
+
         $result = $this->updateUser($id, $data);
 
         if ($result) {
-            echo json_response( ["user" => $result]);
+            json_response(["user" => $result]);
         } else {
             error(500, "Error updating User");
         }

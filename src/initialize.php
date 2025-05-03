@@ -1,8 +1,7 @@
 <?php
-//Load Environment variables
-
 use JetBrains\PhpStorm\NoReturn;
 
+//Load Environment variables
 require_once('DotEnv.php');
 $dotenv = new DotEnv('../.env');
 $dotenv->load();

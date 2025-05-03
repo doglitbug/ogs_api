@@ -69,12 +69,12 @@ class SearchController extends Controller
             $where_and = "AND";
         }
 
-        if (isset($options['search']) && $options['search'] != "") {
+        if (isset($options['q']) && $options['q'] != "") {
             $query .= <<<SQL
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
-            $values[] = $options['search'];
+            $values[] = $options['q'];
             $where_and = "AND";
         }
 
