@@ -32,7 +32,7 @@ class UserController extends Controller
 
         //TODO Check valid data!
         $errors = [];
-        //$errors['name']="Haha";
+        //$errors['name']="Please enter a real name";
 
         if ($errors) {
             error(400, $errors);

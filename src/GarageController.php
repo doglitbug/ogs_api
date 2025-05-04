@@ -2,10 +2,10 @@
 
 class GarageController extends Controller
 {
-    public function processGetRequest(string $id, array $options): void
+    public function processGetRequest(string $id, array $data): void
     {
         if ($id) {
-            $result = $this->get_garage($id, $options);
+            $result = $this->get_garage($id, $data);
             if ($result) {
                 json_response(["garage" => $result]);
             } else {
@@ -14,9 +14,9 @@ class GarageController extends Controller
         }
         //TODO Check null, visible, owner or worker etc
 
-        $result = $this->get_garages($options);
+        $result = $this->get_garages($data);
         if ($result) {
-            echo json_response(["garages" => ["results" => $result]]);
+            json_response(["garage" => ["garages" => $result]]);
         } else {
             error(404, "No Garages found");
         }
@@ -25,10 +25,10 @@ class GarageController extends Controller
 
     /** Get an individual garage
      * @param string $garage_id
-     * @param array $options
+     * @param array $data
      * @return array
      */
-    private function get_garage(string $garage_id, array $options): array
+    private function get_garage(string $garage_id, array $data): array
     {
         $types = "";
         $values = array();
@@ -53,21 +53,21 @@ class GarageController extends Controller
 
         $where_and = "WHERE";
 
-        if (isset($options['visible'])) {
+        if (isset($data['visible'])) {
             $query .= <<<SQL
                 $where_and visible = ?
             SQL;
             $types .= "s";
-            $values[] = $options['visible'];
+            $values[] = $data['visible'];
             $where_and = "AND";
         }
 
-        $result = $this->database->get_query($query, $types, $values, $options);
+        $result = $this->database->get_query($query, $types, $values, $data);
 
         return $result ? $result[0] : [];
     }
 
-    public function get_garages(array $options): array
+    public function get_garages(array $data): array
     {
         $types = "";
         $values = array();
@@ -86,26 +86,26 @@ class GarageController extends Controller
 
         $where_and = "WHERE";
 
-        if (isset($options['visible'])) {
+        if (isset($data['visible'])) {
             $query .= <<<SQL
                 $where_and visible = ?
             SQL;
             $types .= "s";
-            $values[] = $options['visible'];
+            $values[] = $data['visible'];
             $where_and = "AND";
         }
 
-        if (isset($options['search']) && $options['search']) {
-            $options['search'] = '%' . $options['search'] . '%';
+        if (isset($data['search']) && $data['search']) {
+            $data['search'] = '%' . $data['search'] . '%';
             $query .= <<<SQL
                 $where_and (name LIKE ?
                 OR garage.description LIKE ?)
             SQL;
             $types .= "ss";
-            array_push($values, $options['search'], $options['search']);
+            array_push($values, $data['search'], $data['search']);
             $where_and = "AND";
         }
 
-        return $this->database->get_query($query, $types, $values, $options);
+        return $this->database->get_query($query, $types, $values, $data);
     }
 }

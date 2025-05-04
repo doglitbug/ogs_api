@@ -4,23 +4,23 @@ class SearchController extends Controller
 {
     public function processGetRequest(string $id, array $data): void
     {
-                $result = $this->get_items($data);
-                if ($result) {
-                    json_response(["search" => ["results" => $result]]);
-                } else {
-                    error(404, "No items found", [$data]);
-                }
-            //TODO Check null, visible, owner or worker etc
+        $result = $this->get_items($data);
+        if ($result) {
+            json_response(["search" => ["items" => $result]]);
+        } else {
+            error(404, "No items found", [$data]);
+        }
+        //TODO Check null, visible, owner or worker etc
     }
 
     /** Get items, usually from an individual garage with primary image
-     * @param array $options garage_id: Filter to particular garage
+     * @param array $data garage_id: Filter to particular garage
      *                       search: Filter to search
      *                       visible: Hide hidden items (required for pagination to work)
      *                       paginate: Use pagination to return only a subset
      * @return array
      */
-    public function get_items(array $options = []): array
+    public function get_items(array $data = []): array
     {
         $types = "";
         $values = array();
@@ -53,31 +53,31 @@ class SearchController extends Controller
 
         $where_and = "WHERE";
 
-        if (isset($options['garage_id'])) {
+        if (isset($data['garage_id'])) {
             $query .= <<<SQL
                 $where_and garage_id = ?
             SQL;
             $types .= "s";
-            $values[] = $options['garage_id'];
+            $values[] = $data['garage_id'];
             $where_and = "AND";
         }
 
-        if (isset($options['visible'])) {
+        if (isset($data['visible'])) {
             $query .= <<<SQL
             $where_and item.visible = '1' AND garage.visible = '1'
         SQL;
             $where_and = "AND";
         }
 
-        if (isset($options['q']) && $options['q'] != "") {
+        if (isset($data['q']) && $data['q'] != "") {
             $query .= <<<SQL
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
-            $values[] = $options['q'];
+            $values[] = $data['q'];
             $where_and = "AND";
         }
 
-        return $this->database->get_query($query, $types, $values, $options);
+        return $this->database->get_query($query, $types, $values, $data);
     }
 }

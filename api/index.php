@@ -63,6 +63,12 @@ switch ($resource) {
         $controller->processRequest($verb, $id, $data);
         break;
 
+    case "location":
+        require_once("../src/LocationController.php");
+        $controller = new LocationController($db, $tokenData);
+        $controller->processRequest($verb, $id, $data);
+        break;
+
     case "token":
         json_encode($tokenData);
         break;

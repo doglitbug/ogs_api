@@ -16,7 +16,7 @@ class ItemController extends Controller
 
         $result = $this->get_items($data);
         if ($result) {
-            json_response(["items" => ["items" => $result]]);
+            json_response(["item" => ["items" => $result]]);
         } else {
             error(404, "No items found", [$data]);
         }
@@ -24,13 +24,13 @@ class ItemController extends Controller
     }
 
     /** Get items, usually from an individual garage with primary image
-     * @param array $options garage_id: Filter to particular garage
+     * @param array $data garage_id: Filter to particular garage
      *                       search: Filter to search
      *                       visible: Hide hidden items (required for pagination to work)
      *                       paginate: Use pagination to return only a subset
      * @return array
      */
-    public function get_items(array $options = []): array
+    public function get_items(array $data = []): array
     {
         $types = "";
         $values = array();
@@ -63,17 +63,17 @@ class ItemController extends Controller
 
         $where_and = "WHERE";
 
-        if (isset($options['garage_id'])) {
+        if (isset($data['garage_id'])) {
             $query .= <<<SQL
             
                 $where_and garage_id = ?
             SQL;
             $types .= "s";
-            $values[] = $options['garage_id'];
+            $values[] = $data['garage_id'];
             $where_and = "AND";
         }
 
-        if (isset($options['visible'])) {
+        if (isset($data['visible'])) {
             $query .= <<<SQL
             
             $where_and item.visible = '1' AND garage.visible = '1'
@@ -81,28 +81,28 @@ class ItemController extends Controller
             $where_and = "AND";
         }
 
-        if (isset($options['search']) && $options['search'] != "") {
+        if (isset($data['search']) && $data['search'] != "") {
             $query .= <<<SQL
 
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
-            $values[] = $options['search'];
+            $values[] = $data['search'];
             $where_and = "AND";
         }
 
-        return $this->database->get_query($query, $types, $values, $options);
+        return $this->database->get_query($query, $types, $values, $data);
     }
 
     /** Get an individual item, usually for show/edit item
      * @param string $item_id
-     * @param array $options public: garage hidden will override visibility
+     * @param array $data public: garage hidden will override visibility
      * @return array|null
      * @todo set visible query as an extra query??
      */
-    public function get_item(string $item_id, array $options = []): array|null
+    public function get_item(string $item_id, array $data = []): array|null
     {
-        $visible_query = isset($options['public']) ? "if (item.visible and garage.visible, true, false) as visible" : "item.visible";
+        $visible_query = isset($data['public']) ? "if (item.visible and garage.visible, true, false) as visible" : "item.visible";
 
         $query = <<<SQL
         SELECT  item.item_id,
