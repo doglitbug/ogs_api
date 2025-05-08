@@ -3,6 +3,8 @@ global $db;
 require_once('../src/initialize.php');
 require_once("../src/Jwt.php");
 require_once ("../src/Controller.php");
+require_once ("../src/validation.php");
+
 $JwtController = new Jwt($_ENV["SECRET_KEY"]);
 
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);

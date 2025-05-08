@@ -170,37 +170,6 @@ class Database
     #endregion
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     #region user
     /** Get all users
      * @param array $options search: Filter to search
@@ -221,7 +190,7 @@ class Database
                 user.description,
                 location.description as location,
                 locked_out,
-                IFNULL(admin.description, 'User') as access,
+                IFNULL(admin.description, 'User') as role,
                 user.created_at,
                 user.updated_at
         FROM user
@@ -262,8 +231,8 @@ class Database
                 user.description,
                 location_id,
                 location.description as location,
+                IFNULL(admin.description, 'User') as role,
                 locked_out,
-                IFNULL(admin.description, 'User') as access,
                 user.created_at,
                 user.updated_at
         FROM user
@@ -322,34 +291,28 @@ class Database
 
     /** Update an existing user
      * @param array $user
-     * @return void
+     * @return array updated user
      */
-    public function update_user(array $user): void
+    public function update_user(array $user): array
     {
         $query = <<<SQL
         UPDATE user SET username = ?,
                         name = ?,
-                        email = ?,
                         description = ?,
-                        location_id = ?,
-                        locked_out = ?
+                        location_id = ?
         WHERE user_id = ?
         LIMIT 1
         SQL;
 
-        $this->update_query(
-            $query,
-            "sssssss",
-            [
-                $user['username'],
+        $this->update_query($query, "sssss",
+            [$user['username'],
                 $user['name'],
-                $user['email'],
                 $user['description'],
                 $user['location_id'],
-                $user['locked_out'],
                 $user['user_id']
-            ]
-        );
+            ]);
+
+        return $this->get_user_by_id($user['user_id']);
     }
 
     /** Check to see if there is a user in the database with this email
@@ -401,7 +364,7 @@ class Database
     public function get_access_level(string $user_id): string
     {
         $query = <<<SQL
-        SELECT IFNULL(admin.description, 'User') as access
+        SELECT IFNULL(admin.description, 'User') as role
         FROM user
         LEFT JOIN user_admin using (user_id)
         LEFT JOIN admin using (admin_id)
@@ -747,8 +710,8 @@ class Database
      * @return array
      */
     public
-        function get_locations(
-    ): array {
+    function get_locations(): array
+    {
         $query = <<<SQL
         SELECT  location_id,
                 description

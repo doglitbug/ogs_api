@@ -16,7 +16,7 @@ class GarageController extends Controller
 
         $result = $this->get_garages($data);
         if ($result) {
-            json_response(["garage" => ["garages" => $result]]);
+            json_response(["garage" => $result]);
         } else {
             error(404, "No Garages found");
         }

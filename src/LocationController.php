@@ -6,7 +6,7 @@ class LocationController extends Controller
     {
         $result = $this->get_locations();
         if ($result) {
-            json_response(["location" => ["locations" => $result]]);
+            json_response(["location" => $result]);
         } else {
             error(404, "No locations found", [$data]);
         }

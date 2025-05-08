@@ -16,7 +16,7 @@ class ItemController extends Controller
 
         $result = $this->get_items($data);
         if ($result) {
-            json_response(["item" => ["items" => $result]]);
+            json_response(["item" => $result]);
         } else {
             error(404, "No items found", [$data]);
         }

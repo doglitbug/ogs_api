@@ -47,17 +47,17 @@ header("Content-type: application/json; charset=UTF-8");
 }
 
 /** Output a JSON response and terminate
- * @param array $output Response to encode and sent
+ * @param array $data Response to encode and sent
  * @param int $statusCode Defaults to 200
  * @return void
  */
-#[NoReturn] function json_response(array $output, int $statusCode = 200): void
+#[NoReturn] function json_response(array $data, int $statusCode = 200): void
 {
     if (isset($db))
         $db->disconnect();
 
     http_response_code($statusCode);
-    echo json_encode($output);
+    echo json_encode($data);
     die();
 }
 
