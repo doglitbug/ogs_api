@@ -5,107 +5,68 @@ class GarageController extends Controller
     public function processGetRequest(string $id, array $data): void
     {
         if ($id) {
-            $result = $this->get_garage($id, $data);
+            $result = $this->database->get_garage($id);
             if ($result) {
                 json_response(["garage" => $result]);
             } else {
                 error(404, "Garage not found");
             }
         }
-        //TODO Check null, visible, owner or worker etc
 
-        $result = $this->get_garages($data);
+        $result = $this->database->get_garages($data);
         if ($result) {
-            json_response(["garage" => $result]);
+            json_response(["garages" => $result]);
         } else {
             error(404, "No Garages found");
         }
-        //TODO Check null, visible, owner or worker etc
     }
 
-    /** Get an individual garage
-     * @param string $garage_id
-     * @param array $data
-     * @return array
-     */
-    private function get_garage(string $garage_id, array $data): array
+    public function processPostRequest(array $data): void
     {
-        $types = "";
-        $values = array();
+        $this->requireLogin();
 
-        $query = <<<SQL
-        SELECT  garage_id,
-                name,
-                garage.description,
-                location.description as location,
-                location.location_id,
-                visible,
-                garage.updated_at,
-                garage.created_at
-        FROM garage
-        LEFT JOIN location using (location_id)
-        WHERE garage_id = ?
-        LIMIT 1
-        SQL;
+        $errors = validate_garage($data);
 
-        $types .= "s";
-        $values[] = $garage_id;
-
-        $where_and = "WHERE";
-
-        if (isset($data['visible'])) {
-            $query .= <<<SQL
-                $where_and visible = ?
-            SQL;
-            $types .= "s";
-            $values[] = $data['visible'];
-            $where_and = "AND";
+        if ($errors) {
+            error(400, $errors);
         }
 
-        $result = $this->database->get_query($query, $types, $values, $data);
+        $newID = $this->database->insert_garage($data);
 
-        return $result ? $result[0] : [];
+        if ($newID) {
+            //Assign ownership
+            $this->database->set_user_garage_access($this->getCurrentUserID(), $newID, "Owner");
+
+            //Get new garage
+            $result = $this->database->get_garage($newID);
+
+            json_response(["garage" => $result], 201);
+        } else {
+            error(500, "Error creating Garage");
+        }
     }
 
-    public function get_garages(array $data): array
+    public function processPutRequest(string $id, array $data): void
     {
-        $types = "";
-        $values = array();
+        $this->requireLogin();
 
-        $query = <<<SQL
-        SELECT  garage_id,
-                name,
-                garage.description,
-                location.description as location,
-                visible,
-                garage.updated_at,
-                garage.created_at
-        FROM garage
-        LEFT JOIN location using (location_id)
-        SQL;
+        //TODO Check we are allowed to update this user, either self OR admin
+        $data['garage_id'] = $id;
+        $errors = validate_garage($data);
 
-        $where_and = "WHERE";
-
-        if (isset($data['visible'])) {
-            $query .= <<<SQL
-                $where_and visible = ?
-            SQL;
-            $types .= "s";
-            $values[] = $data['visible'];
-            $where_and = "AND";
+        if ($errors) {
+            error(400, $errors);
         }
 
-        if (isset($data['search']) && $data['search']) {
-            $data['search'] = '%' . $data['search'] . '%';
-            $query .= <<<SQL
-                $where_and (name LIKE ?
-                OR garage.description LIKE ?)
-            SQL;
-            $types .= "ss";
-            array_push($values, $data['search'], $data['search']);
-            $where_and = "AND";
-        }
+        $this->database->update_garage($data);
 
-        return $this->database->get_query($query, $types, $values, $data);
+        //Get updated garage
+        $result = $this->database->get_garage($id);
+
+        if ($result) {
+            json_response(["garage" => $result]);
+        } else {
+            error(500, "Error updating Garage");
+        }
     }
 }

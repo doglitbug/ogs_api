@@ -181,6 +181,7 @@ function validate_garage(array $garage): array
     }
 
     #visible
+    $garage['visible'] = 1;//TODO
     $visible_str = (string)$garage['visible'];
     if (!has_inclusion_of($visible_str, ["0", "1"])) {
         $errors['visible'] = "Visible must be true or false";

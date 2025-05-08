@@ -1,5 +1,4 @@
 <?php
-use JetBrains\PhpStorm\NoReturn;
 
 //Load Environment variables
 require_once('DotEnv.php');
@@ -35,8 +34,9 @@ header("Content-type: application/json; charset=UTF-8");
  * @param int $statusCode HTTP Code for error
  * @param string|array $error Message(s)
  * @param string|array $extended Extended error message or an array for debugging
+ * @return void
  */
-#[NoReturn] function error(int $statusCode, string|array $error, string|array $extended = ""): void
+function error(int $statusCode, string|array $error, string|array $extended = ""): void
 {
     $output["error"] = $error;
     if ($_ENV['APPLICATION_ENV'] === "DEV") {
@@ -51,7 +51,7 @@ header("Content-type: application/json; charset=UTF-8");
  * @param int $statusCode Defaults to 200
  * @return void
  */
-#[NoReturn] function json_response(array $data, int $statusCode = 200): void
+function json_response(array $data, int $statusCode = 200): void
 {
     if (isset($db))
         $db->disconnect();

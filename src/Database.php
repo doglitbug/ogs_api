@@ -151,31 +151,10 @@ class Database
 
     #endregion
 
-    #region settings
-    public function get_settings(): array
-    {
-        $query = <<<SQL
-            SELECT name, value
-            FROM settings
-        SQL;
-
-        return $this->get_query($query);
-    }
-
-    public function update_settings(array $settings): void
-    {
-
-    }
-
-    #endregion
-
-
     #region user
     /** Get all users
      * @param array $options search: Filter to search
-     *                       paginate: Use pagination to return only a subset
      * @return array
-     * @todo Change this to a full text search?
      */
     public function get_users(array $options = []): array
     {
@@ -221,7 +200,7 @@ class Database
      * @param string $user_id
      * @return array|null User details
      */
-    public function get_user_by_id(string $user_id): array|null
+    public function get_user(string $user_id): array|null
     {
         $query = <<<SQL
         SELECT  user_id,
@@ -273,6 +252,33 @@ class Database
         return $result ? $result[0] : null;
     }
 
+    /** Get user by username for logging in
+     * @param string $username Username
+     * @return array|null User details
+     */
+    public function get_user_by_username(string $username): array|null
+    {
+        $query = <<<SQL
+        SELECT  user_id,
+                username,
+                name,
+                email,
+                location_id,
+                location.description as location,
+                locked_out,
+                IFNULL(admin.description, 'User') as role
+        FROM user
+        LEFT JOIN location using (location_id)
+        LEFT JOIN user_admin using (user_id)
+        LEFT JOIN admin using (admin_id)
+        WHERE username = ?
+        LIMIT 1
+        SQL;
+
+        $result = $this->get_query($query, "s", [$username]);
+        return $result ? $result[0] : null;
+    }
+
 
     /** Add a new user to the database
      * @param array $user Requires username, name and email
@@ -312,7 +318,7 @@ class Database
                 $user['user_id']
             ]);
 
-        return $this->get_user_by_id($user['user_id']);
+        return $this->get_user($user['user_id']);
     }
 
     /** Check to see if there is a user in the database with this email
@@ -380,12 +386,12 @@ class Database
     #endregion
 
     #region garage
-    /** Get all garages
-     * @param array $options visible: Are they publicly visible?
-     *                          search: Search term to filter by
+
+    /** Get an individual garage
+     * @param string $garage_id
      * @return array
      */
-    public function get_garages(array $options = []): array
+    public function get_garage(string $garage_id): array
     {
         $types = "";
         $values = array();
@@ -395,7 +401,43 @@ class Database
                 name,
                 garage.description,
                 location.description as location,
+                location.location_id,
                 visible,
+                garage.updated_at,
+                garage.created_at
+        FROM garage
+        LEFT JOIN location using (location_id)
+        WHERE garage_id = ?
+        LIMIT 1
+        SQL;
+
+        $types .= "s";
+        $values[] = $garage_id;
+
+        $result = $this->get_query($query, $types, $values, []);
+
+        //If we have a garage, add in the owners/workers
+        if ($result) {
+            $result[0]['staff'] = $this->get_garage_staff($garage_id);
+        }
+
+        return $result ? $result[0] : [];
+    }
+
+    /**
+     * @param array $data search: filter on name/description
+     * @return array
+     */
+    public function get_garages(array $data): array
+    {
+        $types = "";
+        $values = array();
+
+        $query = <<<SQL
+        SELECT  garage_id,
+                name,
+                garage.description,
+                location.description as location,
                 garage.updated_at,
                 garage.created_at
         FROM garage
@@ -404,29 +446,18 @@ class Database
 
         $where_and = "WHERE";
 
-        if (isset($options['visible'])) {
+        if (isset($data['search']) && $data['search']) {
+            $data['search'] = '%' . $data['search'] . '%';
             $query .= <<<SQL
-            
-                $where_and visible = ?
-            SQL;
-            $types .= "s";
-            $values[] = $options['visible'];
-            $where_and = "AND";
-        }
-
-        if (isset($options['search']) && $options['search']) {
-            $options['search'] = '%' . $options['search'] . '%';
-            $query .= <<<SQL
-            
                 $where_and (name LIKE ?
                 OR garage.description LIKE ?)
             SQL;
             $types .= "ss";
-            array_push($values, $options['search'], $options['search']);
+            array_push($values, $data['search'], $data['search']);
             $where_and = "AND";
         }
 
-        return $this->get_query($query, $types, $values, $options);
+        return $this->get_query($query, $types, $values, $data);
     }
 
 
@@ -477,7 +508,7 @@ class Database
      * @param string $garage_id
      * @return array|null
      */
-    public function get_garage_admin(string $garage_id): array|null
+    public function get_garage_staff(string $garage_id): array|null
     {
         $query = <<<SQL
         SELECT  user_id,
@@ -510,7 +541,7 @@ class Database
             $garage['name'],
             $garage['description'],
             $garage['location_id'],
-            $garage['visible'],
+            "1",
         ]);
     }
 
@@ -536,7 +567,7 @@ class Database
                 $garage['name'],
                 $garage['description'],
                 $garage['location_id'],
-                $garage['visible'],
+                "1",
                 $garage['garage_id']
             ]
         );
@@ -561,14 +592,38 @@ class Database
     #endregion
 
     #region item
+    /** Get an individual item, usually for show/edit item
+     * @param string $item_id
+     * @param array $data public: garage hidden will override visibility
+     * @return array|null
+     */
+    public function get_item(string $item_id, array $data = []): array|null
+    {
+        $visible_query = isset($data['public']) ? "if (item.visible and garage.visible, true, false) as visible" : "item.visible";
+
+        $query = <<<SQL
+        SELECT  item.item_id,
+                item.garage_id,
+                item.name,
+                item.description,
+                $visible_query
+        FROM item
+        LEFT JOIN garage USING (garage_id)
+        WHERE item_id = ?
+        LIMIT 1
+        SQL;
+
+        $result = $this->get_query($query, "s", [$item_id]);
+        return $result ? $result[0] : null;
+    }
+
     /** Get items, usually from an individual garage with primary image
-     * @param array $options garage_id: Filter to particular garage
+     * @param array $data garage_id: Filter to particular garage
      *                       search: Filter to search
      *                       visible: Hide hidden items (required for pagination to work)
-     *                       paginate: Use pagination to return only a subset
      * @return array
      */
-    public function get_items(array $options = []): array
+    public function get_items(array $data = []): array
     {
         $types = "";
         $values = array();
@@ -601,17 +656,17 @@ class Database
 
         $where_and = "WHERE";
 
-        if (isset($options['garage_id'])) {
+        if (isset($data['garage_id'])) {
             $query .= <<<SQL
             
                 $where_and garage_id = ?
             SQL;
             $types .= "s";
-            $values[] = $options['garage_id'];
+            $values[] = $data['garage_id'];
             $where_and = "AND";
         }
 
-        if (isset($options['visible'])) {
+        if (isset($data['visible'])) {
             $query .= <<<SQL
             
             $where_and item.visible = '1' AND garage.visible = '1'
@@ -619,43 +674,17 @@ class Database
             $where_and = "AND";
         }
 
-        if (isset($options['search']) && $options['search'] != "") {
+        if (isset($data['search']) && $data['search'] != "") {
             $query .= <<<SQL
 
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
-            $values[] = $options['search'];
+            $values[] = $data['search'];
             $where_and = "AND";
         }
 
-        return $this->get_query($query, $types, $values, $options);
-    }
-
-    /** Get an individual item, usually for show/edit item
-     * @param string $item_id
-     * @param array $options public: garage hidden will override visibility
-     * @return array|null
-     * @todo set visible query as an extra query??
-     */
-    public function get_item(string $item_id, array $options = []): array|null
-    {
-        $visible_query = isset($options['public']) ? "if (item.visible and garage.visible, true, false) as visible" : "item.visible";
-
-        $query = <<<SQL
-        SELECT  item.item_id,
-                item.garage_id,
-                item.name,
-                item.description,
-                $visible_query
-        FROM item
-        LEFT JOIN garage USING (garage_id)
-        WHERE item_id = ?
-        LIMIT 1
-        SQL;
-
-        $result = $this->get_query($query, "s", [$item_id]);
-        return $result ? $result[0] : null;
+        return $this->database->get_query($query, $types, $values, $data);
     }
 
     /** Insert a new item
@@ -709,14 +738,13 @@ class Database
     /** Get all locations
      * @return array
      */
-    public
-    function get_locations(): array
+    public function get_locations(): array
     {
         $query = <<<SQL
-        SELECT  location_id,
-                description
+        SELECT  location.location_id,
+                location.description
         FROM location
-        ORDER BY description
+        ORDER BY description = "Unknown" DESC, description
         SQL;
 
         return $this->get_query($query);
@@ -728,7 +756,7 @@ class Database
     /** Set access for user to garage (will update if already existing!)
      * @param string $user_id
      * @param string $garage_id
-     * @param string $access
+     * @param string $access Owner|Worker
      * @return void
      */
     public function set_user_garage_access(string $user_id, string $garage_id, string $access): void

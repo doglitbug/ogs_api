@@ -4,14 +4,11 @@ class UserController extends Controller
 {
     public function processGetRequest(string $id, array $data): void
     {
-        //Looking at any user details requires being logged in to prevent web scraping bots
-        if (!$this->isLoggedIn()) {
-            error(403, "Please log in to continue");
-        }
+        $this->requireLogin();
 
         if ($id == "") $id = $this->getCurrentUserID();
 
-        $result = $this->database->get_user_by_id($id);
+        $result = $this->database->get_user($id);
         if ($result) {
             json_response(["user" => $result]);
         } else {
@@ -21,10 +18,7 @@ class UserController extends Controller
 
     public function processPutRequest(string $id, array $data): void
     {
-        //Looking at any user details requires being logged in to prevent web scraping bots
-        if (!$this->isLoggedIn()) {
-            error(403, "Please log in to continue");
-        }
+        $this->requireLogin();
 
         if ($id == "") $id = $this->getCurrentUserID();
 
