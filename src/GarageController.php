@@ -7,6 +7,9 @@ class GarageController extends Controller
         if ($id) {
             $result = $this->database->get_garage($id);
             if ($result) {
+                if ($this->isLoggedIn()) {
+                    $result['staff'] = $this->database->get_garage_staff($id);
+                }
                 json_response(["garage" => $result]);
             } else {
                 error(404, "Garage not found");

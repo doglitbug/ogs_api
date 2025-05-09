@@ -416,11 +416,6 @@ class Database
 
         $result = $this->get_query($query, $types, $values, []);
 
-        //If we have a garage, add in the owners/workers
-        if ($result) {
-            $result[0]['staff'] = $this->get_garage_staff($garage_id);
-        }
-
         return $result ? $result[0] : [];
     }
 
@@ -513,6 +508,8 @@ class Database
         $query = <<<SQL
         SELECT  user_id,
                 username,
+                name,
+                email,
                 access.description as access
         FROM user_garage_access
             LEFT JOIN user USING (user_id)
