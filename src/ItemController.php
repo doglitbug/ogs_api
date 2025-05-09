@@ -13,9 +13,20 @@ class ItemController extends Controller
             }
         }
 
+        //Default to page 1
+        //TODO Check if the page is actually a number
+        if (!isset($data['page'])) {
+            $data['page'] = 1;
+        }
+
         $result = $this->database->get_items($data);
         if ($result) {
-            json_response(["items" => $result]);
+            $total = $this->database->get_items_total($data);
+
+            json_response(["items" => $result,
+                "current_page" => $data['page'],
+                "last_page"=>intdiv($total, 12),
+                "total_items" => $total]);
         } else {
             error(404, "No items found", [$data]);
         }

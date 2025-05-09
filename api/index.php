@@ -43,6 +43,7 @@ switch ($resource) {
         $controller = new AuthController($db);
         $controller->processRequest($verb, "", $data);
         break;
+
     case "user":
         require_once("../src/UserController.php");
         $controller = new UserController($db, $tokenData);
@@ -54,11 +55,13 @@ switch ($resource) {
         $controller = new GarageController($db, $tokenData);
         $controller->processRequest($verb, $id, $data);
         break;
+
     case "item":
         require_once("../src/ItemController.php");
         $controller = new ItemController($db, $tokenData);
         $controller->processRequest($verb, $id, $data);
         break;
+
     case "search":
         require_once("../src/SearchController.php");
         $controller = new SearchController($db, $tokenData);

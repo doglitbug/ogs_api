@@ -78,7 +78,7 @@ abstract class Controller
 
     /** Process a GET request to retrieve a resource
      * @param string $id resource ID
-     * @param array $data Body and parameter data
+     * @param array $data Parameter data (Get requests shouldn't have a body)
      * @return void
      */
     protected function processGetRequest(string $id, array $data): void

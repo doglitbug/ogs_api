@@ -49,12 +49,6 @@ class Database
      */
     public function get_query(string $query, string $types = "", array $values = [], array $data = []): array|null
     {
-        // if (isset($options['paginate'])) {
-        //     list($page, $size) = get_page_and_size();
-        //     $offset = ($page - 1) * $size;
-        //     $query .= "\nLIMIT $offset, $size";
-        // }
-
         try {
             //Prepare
             $statement = $this->connection->prepare($query);
@@ -414,7 +408,7 @@ class Database
         $types .= "s";
         $values[] = $garage_id;
 
-        $result = $this->get_query($query, $types, $values, []);
+        $result = $this->get_query($query, $types, $values);
 
         return $result ? $result[0] : [];
     }
@@ -616,8 +610,7 @@ class Database
 
     /** Get items, usually from an individual garage with primary image
      * @param array $data garage_id: Filter to particular garage
-     *                       search: Filter to search
-     *                       visible: Hide hidden items (required for pagination to work)
+     *                       q: Filter to search
      * @return array
      */
     public function get_items(array $data = []): array
@@ -630,7 +623,6 @@ class Database
                 garage_id,
                 item.name,
                 item.description,
-                item.visible,
                 item.updated_at,
                 item.created_at,
                 image.image_id,
@@ -655,7 +647,6 @@ class Database
 
         if (isset($data['garage_id'])) {
             $query .= <<<SQL
-            
                 $where_and garage_id = ?
             SQL;
             $types .= "s";
@@ -663,25 +654,33 @@ class Database
             $where_and = "AND";
         }
 
-        if (isset($data['visible'])) {
+        if (isset($data['q']) && $data['q'] != "") {
             $query .= <<<SQL
-            
-            $where_and item.visible = '1' AND garage.visible = '1'
-        SQL;
-            $where_and = "AND";
-        }
-
-        if (isset($data['search']) && $data['search'] != "") {
-            $query .= <<<SQL
-
                 $where_and MATCH (item.name, item.description) AGAINST (?)
             SQL;
             $types .= "s";
-            $values[] = $data['search'];
+            $values[] = $data['q'];
             $where_and = "AND";
         }
 
-        return $this->database->get_query($query, $types, $values, $data);
+        if (isset($data['page'])) {
+            $page = $data['page'];
+            $size = 12;
+            $offset = ($page - 1) * $size;
+            $query .= "\nLIMIT $offset, $size";
+        }
+
+        return $this->get_query($query, $types, $values, $data);
+    }
+
+    /** Get the total number of items without pagination
+     * @param array $data
+     * @return int total item count
+     */
+    public function get_items_total(array $data): int
+    {
+        if (isset($data['page'])) unset($data['page']);
+        return count($this->get_items($data));
     }
 
     /** Insert a new item
